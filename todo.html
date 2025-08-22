@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Todo App</title>
+</head>
+
+<body>
+  <h1>My Todo App</h1>
+
+  <!-- Add new todo -->
+  <form id="todoForm">
+    <input type="text" id="todoText" placeholder="Enter your todo" required>
+    <button type="submit">Add Todo</button>
+  </form>
+
+  <!-- Display todos -->
+  <div id="todoList"></div>
+
+  <script>
+    // Add new todo
+    document.getElementById('todoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const text = document.getElementById('todoText').value;
+
+      const response = await fetch('http://localhost:3000/todos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: text })
+      });
+
+      if (response.ok) {
+        const newTodo = await response.json();
+        console.log('Added:', newTodo);
+        document.getElementById('todoText').value = ''; // Clear input
+        loadTodos(); // Refresh the list
+      }
+    });
+
+    // Load and display todos
+    async function loadTodos() {
+      const response = await fetch('http://localhost:3000/todos');
+      const todos = await response.json();
+
+      const todoList = document.getElementById('todoList');
+      todoList.innerHTML = '<h2>Your Todos:</h2>';
+
+      todos.forEach(todo => {
+        todoList.innerHTML += `
+                    <div>
+                        <input type="checkbox" ${todo.completed ? 'checked' : ''}>
+                        ${todo.text}
+                        <button onclick="deleteTodo('${todo.id}')">Delete</button>
+                    </div>
+                `;
+      });
+    }
+
+    // Delete todo
+    async function deleteTodo(id) {
+      const response = await fetch(`http://localhost:3000/todos/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        loadTodos(); // Refresh the list
+      }
+    }
+
+    // Load todos when page loads
+    loadTodos();
+  </script>
+</body>
+
+</html>
